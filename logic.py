@@ -1,12 +1,13 @@
+from tkinter import Spinbox
 from PyQt5.QtWidgets import QDialog, \
                             QVBoxLayout, \
                             QPushButton, \
                             QSpinBox, \
-                            QHBoxLayout
-import matplotlib.pyplot as plt
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-import matplotlib
-
+                            QHBoxLayout, \
+                            QWidget                    
+from PyQt5.QtGui import QPainter
+from PyQt5.QtCore import QPointF
+from matplotlib.pyplot import draw
 
 
 
@@ -26,10 +27,13 @@ class MainWindow(QDialog):
 
         self.button_1 = QPushButton('Начать', self)
         self.button_2 = QPushButton('Выход', self)
-        self.button_1.clicked.connect(self.draw)
         
-        self.figure = plt.figure(facecolor='#CCCCCC')
-        self.canvas = FigureCanvas(self.figure)
+        self.board = Board(self.spinbox.value())
+
+        #// SIGNALS
+        # self.button_1.clicked.connect(self.board.draw_rect)
+        self.spinbox.valueChanged.connect(lambda: self.board.change_speed(
+            self.spinbox.value()))
 
         #// Create Layout
         buttons_layout = QHBoxLayout()
@@ -38,15 +42,38 @@ class MainWindow(QDialog):
         
         layout = QVBoxLayout()
         layout.addWidget(self.spinbox)
-        layout.addWidget(self.canvas)
+        layout.addWidget(self.board)
         layout.addLayout(buttons_layout)        
-        
         self.setLayout(layout)
-        self.canvas.draw()
+       
+
+class Board(QDialog):
     
-    def draw(self):
-        plt.gcf().clear()
-        circle1 = matplotlib.patches.Circle((0, 0), radius=0.1, fill=True)
-        S
-        self.cavnas.draw()
+    def __init__(self, spinbox):
+        super().__init__()
+        self.setStyleSheet('background-color: #90EE90')
+        self.x = 150
+        self.flag = 1
+        self.spinbox = spinbox
+    
+    def paintEvent(self, event):
+        self.painter = QPainter()
+        self.painter.begin(self)
+        self.draw_rect()
+        self.painter.end()
+
+    def draw_rect(self):
+        self.painter.drawEllipse((QPointF(self.x, self.height()//2)), 40, 40)
+        if self.x <= 40:
+            self.flag = 1
+        elif self.x >= self.width()-40:
+            self.flag = -1
         
+        if self.flag == 1:
+            self.x += self.spinbox/100
+        else:
+            self.x -= self.spinbox/100
+        self.update()
+
+    def change_speed(self, value):
+        self.spinbox = value
