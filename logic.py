@@ -1,3 +1,4 @@
+import sys
 from tkinter import Spinbox
 from PyQt5.QtWidgets import QDialog, \
                             QVBoxLayout, \
@@ -5,7 +6,9 @@ from PyQt5.QtWidgets import QDialog, \
                             QSpinBox, \
                             QHBoxLayout, \
                             QWidget                    
-from PyQt5.QtGui import QPainter
+from PyQt5.QtGui import QPainter, \
+                        QBrush, \
+                        QColor
 from PyQt5.QtCore import QPointF
 from matplotlib.pyplot import draw
 
@@ -31,9 +34,10 @@ class MainWindow(QDialog):
         self.board = Board(self.spinbox.value())
 
         #// SIGNALS
-        # self.button_1.clicked.connect(self.board.draw_rect)
+        self.button_1.clicked.connect(lambda: self.board.start_game(True))
         self.spinbox.valueChanged.connect(lambda: self.board.change_speed(
             self.spinbox.value()))
+        self.button_2.clicked.connect(lambda: sys.exit())
 
         #// Create Layout
         buttons_layout = QHBoxLayout()
@@ -51,9 +55,12 @@ class Board(QDialog):
     
     def __init__(self, spinbox):
         super().__init__()
-        self.setStyleSheet('background-color: #90EE90')
+        self.setStyleSheet('background-color: #CCF')
         self.x = 150
-        self.flag = 1
+        self.y = -1
+        self.flag_x = 1
+        self.flag_y = 1
+        self.is_game_run = False
         self.spinbox = spinbox
     
     def paintEvent(self, event):
@@ -63,17 +70,40 @@ class Board(QDialog):
         self.painter.end()
 
     def draw_rect(self):
-        self.painter.drawEllipse((QPointF(self.x, self.height()//2)), 40, 40)
+        brush = QBrush(QColor(255, 0, 0))
+        self.painter.setBrush(brush)
+        self.painter.drawEllipse((QPointF(self.x, self.y)), 40, 40)
+        #// Change x Axis. Set Flag to change.
         if self.x <= 40:
-            self.flag = 1
+            self.flag_x = 1
         elif self.x >= self.width()-40:
-            self.flag = -1
-        
-        if self.flag == 1:
+            self.flag_x = -1
+        #// Change x's value
+        if self.flag_x == 1:
             self.x += self.spinbox/100
         else:
             self.x -= self.spinbox/100
-        self.update()
+        
+        #// Change y Axis. Set Flag to change.
+        if self.y <= 40:
+            self.flag_y = 1
+        elif self.y >= self.height()-40:
+            self.flag_y = -1
+        #// Change y's value
+        if self.flag_y == 1:
+            self.y += self.spinbox/100
+        else:
+            self.y -= self.spinbox/100
+        
+        #// Check button clicked    
+        if self.is_game_run:
+            self.update()
 
     def change_speed(self, value):
         self.spinbox = value
+
+    def start_game(self, start_flag):
+        if start_flag:
+            self.is_game_run = True
+            self.update()
+        
